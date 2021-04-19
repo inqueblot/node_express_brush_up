@@ -1,27 +1,46 @@
 const express = require('express')
-const logger = require('./logger')
-const authorize = require('./authorize')
 const morgan = require('morgan')
 const app = express();
-// req => middleware => res
+
 app.use(morgan('tiny'))
-// app.use('/api', [logger, authorize])
-app.use(express.static('./public'))
+//static assets
+app.use(express.static('./methods-public'))
+//parse form data
+app.use(express.urlencoded({ extended: false }))
+//parse json
+app.use(express.json())
 
-app.get('/', (req, res) => {
-    res.send("Home")
+let { people } = require('./data')
+
+app.post('/login', (req, res) => {
+    console.log(req.body)
+    if (req.body.name) {
+        return res.status(200).send(`Welcome ${req.body.name}`)
+    }
+    else {
+        res.status(404).send('please provide credentials')
+    }
+
 })
 
-app.get('/about', (req, res) => {
-    res.send('About')
+app.post('/api/postman/people', (req, res) => {
+    const { name } = req.body
+    if (!name) {
+        return res.status(400).json({ success: false, msg: 'please provide name value' })
+    }
+    res.status(201).json({ success: true, data: [...people, name] })
 })
 
-app.get('/api/products', (req, res) => {
-    res.send('Products')
+app.get('/api/people', (req, res) => {
+    res.status(200).json({ success: true, data: people })
 })
 
-app.get('/api/items', (req, res) => {
-    res.send('Items')
+app.post('/api/people', (req, res) => {
+    const { name } = req.body
+    if (!name) {
+        return res.status(400).json({ success: false, msg: 'please provide name value' })
+    }
+    res.status(201).json({ success: true, person: name })
 })
 
 app.listen(5000, () => {
